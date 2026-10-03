@@ -1,0 +1,799 @@
+<div class="dashboard">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <div class="logo">
+      <span class="logo-icon">
+        T
+      </span>
+
+      <span>
+        TaskForge
+      </span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <!-- Dashboard -->
+      <button
+        class="nav-item active"
+        type="button"
+        (click)="router.navigate(['/dashboard'])"
+      >
+        <span>▦</span>
+        Dashboard
+      </button>
+
+      <!-- Projects -->
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/projects'])"
+      >
+        <span>▣</span>
+        Projects
+      </button>
+
+      <!-- Issues -->
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/issues'])"
+      >
+        <span>✓</span>
+        Issues
+      </button>
+
+      <!-- Activities -->
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/activities'])"
+      >
+        <span>◷</span>
+        Activities
+      </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <div class="user-mini">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-info">
+
+          <strong>
+            {{ userName }}
+          </strong>
+
+          <span>
+            {{ userRole }}
+          </span>
+
+        </div>
+
+      </div>
+
+      <button
+        class="logout-btn"
+        type="button"
+        (click)="logout()"
+      >
+        <span>↪</span>
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div>
+
+        <h1>
+          Dashboard
+        </h1>
+
+        <p>
+          Welcome back, {{ userName }}. Here's your project overview.
+        </p>
+
+      </div>
+
+      <div class="topbar-actions">
+
+        <button
+          class="secondary-btn"
+          type="button"
+          (click)="createProject()"
+        >
+          + Project
+        </button>
+
+        <button
+          class="primary-btn"
+          type="button"
+          (click)="createIssue()"
+        >
+          + New Issue
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         ERROR
+    ====================================================== -->
+
+    <div
+      class="error-banner"
+      *ngIf="errorMessage"
+    >
+
+      <span>!</span>
+
+      {{ errorMessage }}
+
+      <button
+        type="button"
+        (click)="loadDashboard()"
+      >
+        Retry
+      </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         LOADING
+    ====================================================== -->
+
+    <div
+      class="loading-state"
+      *ngIf="loading"
+    >
+
+      <div class="loader"></div>
+
+      <p>
+        Loading dashboard...
+      </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         CONTENT
+    ====================================================== -->
+
+    <ng-container
+      *ngIf="!loading"
+    >
+
+      <!-- =====================================================
+           STAT CARDS
+      ====================================================== -->
+
+      <section class="stats-grid">
+
+        <!-- Total Projects -->
+
+        <div class="stat-card">
+
+          <div class="stat-icon blue">
+            ▣
+          </div>
+
+          <div>
+
+            <span>
+              Total Projects
+            </span>
+
+            <strong>
+              {{ totalProjects }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- Total Issues -->
+
+        <div class="stat-card">
+
+          <div class="stat-icon purple">
+            ✓
+          </div>
+
+          <div>
+
+            <span>
+              Total Issues
+            </span>
+
+            <strong>
+              {{ totalIssues }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- Open Issues -->
+
+        <div class="stat-card">
+
+          <div class="stat-icon orange">
+            ◷
+          </div>
+
+          <div>
+
+            <span>
+              Open Issues
+            </span>
+
+            <strong>
+              {{ openIssues }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- Completed -->
+
+        <div class="stat-card">
+
+          <div class="stat-icon green">
+            ✓
+          </div>
+
+          <div>
+
+            <span>
+              Completed
+            </span>
+
+            <strong>
+              {{ completedIssues }}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+           MAIN GRID
+      ====================================================== -->
+
+      <section class="dashboard-grid">
+
+
+        <!-- =====================================================
+             ISSUE STATUS
+        ====================================================== -->
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h2>
+                Issue Status
+              </h2>
+
+              <p>
+                Current distribution of your issues
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="status-list">
+
+            <!-- Todo -->
+
+            <div class="status-item">
+
+              <div class="status-label">
+
+                <span class="status-dot todo"></span>
+
+                <span>
+                  Todo
+                </span>
+
+              </div>
+
+              <strong>
+                {{ todoCount }}
+              </strong>
+
+            </div>
+
+
+            <!-- In Progress -->
+
+            <div class="status-item">
+
+              <div class="status-label">
+
+                <span class="status-dot progress"></span>
+
+                <span>
+                  In Progress
+                </span>
+
+              </div>
+
+              <strong>
+                {{ inProgressCount }}
+              </strong>
+
+            </div>
+
+
+            <!-- In Review -->
+
+            <div class="status-item">
+
+              <div class="status-label">
+
+                <span class="status-dot review"></span>
+
+                <span>
+                  In Review
+                </span>
+
+              </div>
+
+              <strong>
+                {{ inReviewCount }}
+              </strong>
+
+            </div>
+
+
+            <!-- Done -->
+
+            <div class="status-item">
+
+              <div class="status-label">
+
+                <span class="status-dot done"></span>
+
+                <span>
+                  Done
+                </span>
+
+              </div>
+
+              <strong>
+                {{ doneCount }}
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             PRIORITY
+        ====================================================== -->
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h2>
+                Priority Overview
+              </h2>
+
+              <p>
+                Issues grouped by priority
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="priority-list">
+
+            <!-- Low -->
+
+            <div class="priority-item">
+
+              <span class="priority-badge low">
+                Low
+              </span>
+
+              <strong>
+                {{ lowPriorityCount }}
+              </strong>
+
+            </div>
+
+
+            <!-- Medium -->
+
+            <div class="priority-item">
+
+              <span class="priority-badge medium">
+                Medium
+              </span>
+
+              <strong>
+                {{ mediumPriorityCount }}
+              </strong>
+
+            </div>
+
+
+            <!-- High -->
+
+            <div class="priority-item">
+
+              <span class="priority-badge high">
+                High
+              </span>
+
+              <strong>
+                {{ highPriorityCount }}
+              </strong>
+
+            </div>
+
+
+            <!-- Critical -->
+
+            <div class="priority-item">
+
+              <span class="priority-badge critical">
+                Critical
+              </span>
+
+              <strong>
+                {{ criticalPriorityCount }}
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+           RECENT ISSUES
+      ====================================================== -->
+
+      <section class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Recent Issues
+            </h2>
+
+            <p>
+              Latest issues created across your projects
+            </p>
+
+          </div>
+
+
+          <button
+            class="text-btn"
+            type="button"
+            (click)="router.navigate(['/projects'])"
+          >
+            View Projects →
+          </button>
+
+        </div>
+
+
+        <!-- EMPTY -->
+
+        <div
+          class="empty-state"
+          *ngIf="recentIssues.length === 0"
+        >
+
+          <div class="empty-icon">
+            ✓
+          </div>
+
+          <h3>
+            No issues yet
+          </h3>
+
+          <p>
+            Create your first issue to start tracking work.
+          </p>
+
+        </div>
+
+
+        <!-- ISSUE TABLE -->
+
+        <div
+          class="issue-table"
+          *ngIf="recentIssues.length > 0"
+        >
+
+          <div class="table-header">
+
+            <span>
+              Issue
+            </span>
+
+            <span>
+              Project
+            </span>
+
+            <span>
+              Priority
+            </span>
+
+            <span>
+              Status
+            </span>
+
+            <span>
+              Assignee
+            </span>
+
+          </div>
+
+
+          <button
+            class="issue-row"
+            type="button"
+            *ngFor="let issue of recentIssues"
+            (click)="openIssue(issue.id)"
+          >
+
+            <!-- Issue -->
+
+            <div class="issue-title">
+
+              <strong>
+                {{ issue.title }}
+              </strong>
+
+              <small>
+                #{{ issue.id }}
+                ·
+                {{ getTypeName(issue.type) }}
+              </small>
+
+            </div>
+
+
+            <!-- Project -->
+
+            <span class="project-name">
+              {{ getProjectName(issue.projectId) }}
+            </span>
+
+
+            <!-- Priority -->
+
+            <span>
+
+              <span
+                class="priority-badge"
+                [class.low]="issue.priority === 1"
+                [class.medium]="issue.priority === 2"
+                [class.high]="issue.priority === 3"
+                [class.critical]="issue.priority === 4"
+              >
+                {{ getPriorityName(issue.priority) }}
+              </span>
+
+            </span>
+
+
+            <!-- Status -->
+
+            <span>
+
+              <span
+                class="issue-status"
+                [class.progress]="issue.status === 2"
+                [class.review]="issue.status === 3"
+                [class.done]="issue.status === 4"
+              >
+                {{ getStatusName(issue.status) }}
+              </span>
+
+            </span>
+
+
+            <!-- Assignee -->
+
+            <span class="assignee">
+              {{ issue.assigneeName || 'Unassigned' }}
+            </span>
+
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+           PROJECTS
+      ====================================================== -->
+
+      <section class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Your Projects
+            </h2>
+
+            <p>
+              Projects currently available in TaskForge
+            </p>
+
+          </div>
+
+
+          <button
+            class="text-btn"
+            type="button"
+            (click)="router.navigate(['/projects'])"
+          >
+            View All →
+          </button>
+
+        </div>
+
+
+        <!-- PROJECT CARDS -->
+
+        <div
+          class="projects-grid"
+          *ngIf="projects.length > 0"
+        >
+
+          <button
+            class="project-card"
+            type="button"
+            *ngFor="let project of projects"
+            (click)="openProject(project.id)"
+          >
+
+            <div class="project-card-top">
+
+              <div class="project-icon">
+                {{ project.name.charAt(0).toUpperCase() }}
+              </div>
+
+              <span class="status-badge">
+                {{ project.status }}
+              </span>
+
+            </div>
+
+
+            <h3>
+              {{ project.name }}
+            </h3>
+
+
+            <p>
+              {{
+                project.description ||
+                'No description available.'
+              }}
+            </p>
+
+
+            <span class="project-link">
+              View Project →
+            </span>
+
+          </button>
+
+        </div>
+
+
+        <!-- NO PROJECTS -->
+
+        <div
+          class="empty-state"
+          *ngIf="projects.length === 0"
+        >
+
+          <div class="empty-icon">
+            ▣
+          </div>
+
+          <h3>
+            No projects yet
+          </h3>
+
+          <p>
+            Create a project to get started.
+          </p>
+
+          <button
+            class="primary-btn"
+            type="button"
+            (click)="createProject()"
+          >
+            + Create Project
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- =====================================================
+           ISSUE LOAD WARNING
+      ====================================================== -->
+
+      <div
+        class="warning-banner"
+        *ngIf="issueLoadErrors > 0"
+      >
+
+        <span>!</span>
+
+        Some project issues could not be loaded.
+
+      </div>
+
+    </ng-container>
+
+  </main>
+
+</div>

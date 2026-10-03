@@ -1,0 +1,956 @@
+<div class="issue-details-page">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <div class="logo">
+      <span class="logo-icon">T</span>
+      <span>TaskForge</span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <button
+        class="nav-item"
+        type="button"
+        (click)="goToDashboard()"
+      >
+        <span>▦</span>
+        Dashboard
+      </button>
+
+      <button
+        class="nav-item"
+        type="button"
+        (click)="goToProject()"
+      >
+        <span>▣</span>
+        Projects
+      </button>
+
+      <button
+        class="nav-item active"
+        type="button"
+      >
+        <span>✓</span>
+        Issues
+      </button>
+
+      <button
+        class="nav-item"
+        type="button"
+      >
+        <span>◷</span>
+        Activities
+      </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <div class="user-mini">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-info">
+          <strong>{{ userName }}</strong>
+          <span>{{ userRole }}</span>
+        </div>
+
+      </div>
+
+      <button
+        class="logout-btn"
+        type="button"
+        (click)="logout()"
+      >
+        <span>↪</span>
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN CONTENT
+  ====================================================== -->
+
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div>
+        <h1>Issue Details</h1>
+        <p>View and manage issue information</p>
+      </div>
+
+      <div class="topbar-user">
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+      </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         LOADING
+    ====================================================== -->
+
+    <div
+      class="loading-state"
+      *ngIf="loading"
+    >
+
+      <div class="loader"></div>
+
+      <p>Loading issue...</p>
+
+    </div>
+
+
+    <!-- =====================================================
+         ERROR
+    ====================================================== -->
+
+    <div
+      class="error-state"
+      *ngIf="!loading && errorMessage"
+    >
+
+      <div class="error-icon">!</div>
+
+      <h3>Something went wrong</h3>
+
+      <p>{{ errorMessage }}</p>
+
+      <button
+        class="primary-btn"
+        type="button"
+        (click)="goToProject()"
+      >
+        Back to Project
+      </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         ISSUE
+    ====================================================== -->
+
+    <ng-container
+      *ngIf="!loading && issue && !errorMessage"
+    >
+
+      <!-- BACK -->
+
+      <button
+        class="back-btn"
+        type="button"
+        (click)="goToProject()"
+      >
+        ← Back to Project
+      </button>
+
+
+      <!-- ===================================================
+           ISSUE HEADER
+      ==================================================== -->
+
+      <section class="issue-header">
+
+        <div class="issue-title-section">
+
+          <div class="issue-type-icon">
+            {{ getTypeName(issue.type).charAt(0) }}
+          </div>
+
+          <div class="issue-heading">
+
+            <div class="issue-title-row">
+
+              <h2>
+                {{ issue.title }}
+              </h2>
+
+              <span class="issue-id">
+                #{{ issue.id }}
+              </span>
+
+            </div>
+
+            <p>
+              {{ getTypeName(issue.type) }}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="issue-actions">
+
+          <!-- Developer / Project Manager / Admin -->
+          <button
+            *ngIf="canEditIssue()"
+            class="secondary-btn"
+            type="button"
+            (click)="openEditForm()"
+          >
+            Edit
+          </button>
+
+          <!-- Admin only -->
+          <button
+            *ngIf="canDeleteIssue()"
+            class="danger-btn"
+            type="button"
+            (click)="openDeleteConfirm()"
+          >
+            Delete
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ===================================================
+           EDIT ISSUE
+      ==================================================== -->
+
+      <section
+        class="panel edit-panel"
+        *ngIf="showEditForm"
+      >
+
+        <div class="panel-header">
+
+          <div>
+            <h2>Edit Issue</h2>
+            <p>Update issue information</p>
+          </div>
+
+          <button
+            class="cancel-btn"
+            type="button"
+            (click)="closeEditForm()"
+            [disabled]="updating"
+          >
+            Cancel
+          </button>
+
+        </div>
+
+
+        <div
+          class="form-error"
+          *ngIf="editErrorMessage"
+        >
+          {{ editErrorMessage }}
+        </div>
+
+
+        <div class="form-grid">
+
+          <div class="form-group full-width">
+
+            <label>Title</label>
+
+            <input
+              type="text"
+              [(ngModel)]="editIssue.title"
+              placeholder="Enter issue title"
+            />
+
+          </div>
+
+
+          <div class="form-group full-width">
+
+            <label>Description</label>
+
+            <textarea
+              rows="4"
+              [(ngModel)]="editIssue.description"
+              placeholder="Enter issue description"
+            ></textarea>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>Type</label>
+
+            <select [(ngModel)]="editIssue.type">
+
+              <option [ngValue]="1">
+                Task
+              </option>
+
+              <option [ngValue]="2">
+                Bug
+              </option>
+
+              <option [ngValue]="3">
+                Story
+              </option>
+
+              <option [ngValue]="4">
+                Feature
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>Priority</label>
+
+            <select [(ngModel)]="editIssue.priority">
+
+              <option [ngValue]="1">
+                Low
+              </option>
+
+              <option [ngValue]="2">
+                Medium
+              </option>
+
+              <option [ngValue]="3">
+                High
+              </option>
+
+              <option [ngValue]="4">
+                Critical
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>Status</label>
+
+            <select [(ngModel)]="editIssue.status">
+
+              <option [ngValue]="1">
+                Todo
+              </option>
+
+              <option [ngValue]="2">
+                In Progress
+              </option>
+
+              <option [ngValue]="3">
+                In Review
+              </option>
+
+              <option [ngValue]="4">
+                Done
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>Assignee</label>
+
+            <select [(ngModel)]="editIssue.assigneeId">
+
+              <option [ngValue]="undefined">
+                Unassigned
+              </option>
+
+              <option
+                *ngFor="let user of users"
+                [ngValue]="user.id"
+              >
+                {{ user.name }}
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label>Due Date</label>
+
+            <input
+              type="date"
+              [(ngModel)]="editIssue.dueDate"
+            />
+
+          </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            class="cancel-btn"
+            type="button"
+            (click)="closeEditForm()"
+            [disabled]="updating"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="primary-btn"
+            type="button"
+            (click)="updateIssue()"
+            [disabled]="updating"
+          >
+            {{
+              updating
+                ? 'Saving...'
+                : 'Save Changes'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ===================================================
+           DELETE CONFIRMATION
+      ==================================================== -->
+
+      <section
+        class="delete-confirm-panel"
+        *ngIf="showDeleteConfirm"
+      >
+
+        <div>
+
+          <h3>Delete this issue?</h3>
+
+          <p>
+            This action cannot be undone.
+          </p>
+
+        </div>
+
+        <div class="delete-confirm-actions">
+
+          <button
+            class="cancel-btn"
+            type="button"
+            (click)="closeDeleteConfirm()"
+            [disabled]="deleting"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="delete-confirm-btn"
+            type="button"
+            (click)="deleteIssue()"
+            [disabled]="deleting"
+          >
+            {{
+              deleting
+                ? 'Deleting...'
+                : 'Delete Issue'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- ===================================================
+           ISSUE INFORMATION
+      ==================================================== -->
+
+      <div class="content-grid">
+
+
+        <!-- DESCRIPTION -->
+
+        <section class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h2>
+                Description
+              </h2>
+
+              <p>
+                Issue details and requirements
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="description">
+
+            <p>
+              {{
+                issue.description ||
+                'No description provided.'
+              }}
+            </p>
+
+          </div>
+
+        </section>
+
+
+        <!-- DETAILS -->
+
+        <section class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h2>
+                Details
+              </h2>
+
+              <p>
+                Issue information
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="details-list">
+
+
+            <div class="detail-row">
+
+              <span>
+                Status
+              </span>
+
+              <span
+                class="status-badge"
+                [class.in-progress]="issue.status === 2"
+                [class.review]="issue.status === 3"
+                [class.done]="issue.status === 4"
+              >
+                {{ getStatusName(issue.status) }}
+              </span>
+
+            </div>
+
+
+            <div class="detail-row">
+
+              <span>
+                Priority
+              </span>
+
+              <span
+                class="priority-badge"
+                [class.low]="issue.priority === 1"
+                [class.medium]="issue.priority === 2"
+                [class.high]="issue.priority === 3"
+                [class.critical]="issue.priority === 4"
+              >
+                {{ getPriorityName(issue.priority) }}
+              </span>
+
+            </div>
+
+
+            <div class="detail-row">
+
+              <span>
+                Type
+              </span>
+
+              <strong>
+                {{ getTypeName(issue.type) }}
+              </strong>
+
+            </div>
+
+
+            <div class="detail-row">
+
+              <span>
+                Reporter
+              </span>
+
+              <strong>
+                {{ issue.reporterName }}
+              </strong>
+
+            </div>
+
+
+            <div class="detail-row">
+
+              <span>
+                Assignee
+              </span>
+
+              <strong>
+                {{ issue.assigneeName || 'Unassigned' }}
+              </strong>
+
+            </div>
+
+
+            <div class="detail-row">
+
+              <span>
+                Due Date
+              </span>
+
+              <strong>
+                {{
+                  issue.dueDate
+                    ? (issue.dueDate | date:'mediumDate')
+                    : 'Not set'
+                }}
+              </strong>
+
+            </div>
+
+
+          </div>
+
+        </section>
+
+      </div>
+
+
+      <!-- ===================================================
+           COMMENTS & ACTIVITY
+      ==================================================== -->
+
+      <section class="panel activity-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Comments & Activity
+            </h2>
+
+            <p>
+              Discussion and recent changes
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ADD COMMENT
+        ================================================== -->
+
+        <!-- Admin / Project Manager / Developer -->
+        <div
+          class="comment-form"
+          *ngIf="canAddComment()"
+        >
+
+          <textarea
+            [(ngModel)]="newComment"
+            rows="3"
+            placeholder="Write a comment..."
+          ></textarea>
+
+
+          <div class="comment-form-footer">
+
+            <span
+              class="comment-error"
+              *ngIf="commentError"
+            >
+              {{ commentError }}
+            </span>
+
+
+            <button
+              class="primary-btn"
+              type="button"
+              [disabled]="addingComment"
+              (click)="addComment()"
+            >
+              {{
+                addingComment
+                  ? 'Adding...'
+                  : 'Add Comment'
+              }}
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             COMMENTS
+        ================================================== -->
+
+        <div class="comments-section">
+
+          <h3>
+            Comments
+          </h3>
+
+
+          <div
+            class="loading-small"
+            *ngIf="loadingComments"
+          >
+            Loading comments...
+          </div>
+
+
+          <div
+            class="empty-small"
+            *ngIf="
+              !loadingComments &&
+              comments.length === 0
+            "
+          >
+            No comments yet.
+          </div>
+
+
+          <div
+            class="comment-item"
+            *ngFor="let comment of comments"
+          >
+
+            <div class="comment-avatar">
+
+              {{ comment.userName.charAt(0).toUpperCase() }}
+
+            </div>
+
+
+            <div class="comment-content">
+
+              <div class="comment-header">
+
+                <div>
+
+                  <strong>
+                    {{ comment.userName }}
+                  </strong>
+
+                  <small>
+                    {{ comment.createdAt | date:'medium' }}
+                  </small>
+
+                </div>
+
+
+                <!-- Only comment owner can edit/delete -->
+                <div
+                  class="comment-actions"
+                  *ngIf="
+                    canEditComment(comment) ||
+                    canDeleteComment(comment)
+                  "
+                >
+
+                  <button
+                    *ngIf="canEditComment(comment)"
+                    type="button"
+                    (click)="startEditComment(comment)"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    *ngIf="canDeleteComment(comment)"
+                    type="button"
+                    (click)="deleteComment(comment)"
+                  >
+                    Delete
+                  </button>
+
+                </div>
+
+              </div>
+
+
+              <!-- NORMAL COMMENT -->
+
+              <p
+                *ngIf="
+                  editingCommentId !== comment.id
+                "
+              >
+                {{ comment.content }}
+              </p>
+
+
+              <!-- EDIT COMMENT -->
+
+              <div
+                class="comment-edit"
+                *ngIf="
+                  editingCommentId === comment.id
+                "
+              >
+
+                <textarea
+                  [(ngModel)]="editingCommentText"
+                  rows="3"
+                ></textarea>
+
+
+                <div class="comment-edit-actions">
+
+                  <button
+                    class="cancel-btn"
+                    type="button"
+                    (click)="cancelEditComment()"
+                  >
+                    Cancel
+                  </button>
+
+
+                  <button
+                    class="primary-btn"
+                    type="button"
+                    (click)="saveCommentEdit(comment)"
+                  >
+                    Save
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             ACTIVITY TIMELINE
+        ================================================== -->
+
+        <div class="activity-section">
+
+          <h3>
+            Activity
+          </h3>
+
+
+          <!-- LOADING -->
+
+          <div
+            class="loading-small"
+            *ngIf="loadingActivities"
+          >
+            Loading activity...
+          </div>
+
+
+          <!-- EMPTY -->
+
+          <div
+            class="empty-small"
+            *ngIf="
+              !loadingActivities &&
+              activities.length === 0
+            "
+          >
+            No activity yet.
+          </div>
+
+
+          <!-- TIMELINE -->
+
+          <div
+            class="activity-timeline"
+            *ngIf="
+              !loadingActivities &&
+              activities.length > 0
+            "
+          >
+
+            <div
+              class="timeline-item"
+              *ngFor="let activity of activities"
+            >
+
+              <!-- TIMELINE DOT -->
+
+              <div class="timeline-dot">
+                <span>•</span>
+              </div>
+
+
+              <!-- ACTIVITY CONTENT -->
+
+              <div class="timeline-content">
+
+                <div class="timeline-header">
+
+                  <strong>
+                    {{ activity.userName }}
+                  </strong>
+
+                  <small>
+                    {{ activity.createdAt | date:'medium' }}
+                  </small>
+
+                </div>
+
+
+                <p>
+                  {{ activity.action }}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </ng-container>
+
+  </main>
+
+</div>

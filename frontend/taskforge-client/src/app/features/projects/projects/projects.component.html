@@ -1,0 +1,629 @@
+<div class="projects-page">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <div class="logo">
+      <span class="logo-icon">T</span>
+      <span>TaskForge</span>
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+      <!-- Dashboard -->
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/dashboard'])"
+      >
+        <span>▦</span>
+        Dashboard
+      </button>
+
+
+      <!-- Projects -->
+      <button
+        class="nav-item active"
+        type="button"
+      >
+        <span>▣</span>
+        Projects
+      </button>
+
+
+      <!-- Issues -->
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/issues'])"
+      >
+        <span>✓</span>
+        Issues
+      </button>
+
+
+      <!-- Activities -->
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/activities'])"
+      >
+        <span>◷</span>
+        Activities
+      </button>
+
+    </nav>
+
+
+    <!-- USER -->
+
+    <div class="sidebar-bottom">
+
+      <div class="user-mini">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-info">
+          <strong>{{ userName }}</strong>
+          <span>{{ userRole }}</span>
+        </div>
+
+      </div>
+
+
+      <button
+        class="logout-btn"
+        type="button"
+        (click)="logout()"
+      >
+        <span>↪</span>
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+
+  <!-- =====================================================
+       MAIN CONTENT
+  ====================================================== -->
+
+  <main class="main-content">
+
+    <!-- HEADER -->
+
+    <header class="topbar">
+
+      <div>
+
+        <h1>Projects</h1>
+
+        <p>
+          Manage your TaskForge projects
+        </p>
+
+      </div>
+
+
+      <div class="topbar-user">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+      </div>
+
+    </header>
+
+
+
+    <!-- ===================================================
+         CONTENT
+    ==================================================== -->
+
+    <section class="content">
+
+
+      <!-- =================================================
+           PAGE HEADER
+      ================================================== -->
+
+      <div class="page-header">
+
+        <div>
+
+          <h2>
+            Your Projects
+          </h2>
+
+          <p>
+            View and manage all your projects.
+          </p>
+
+        </div>
+
+
+        <!-- ADMIN + PROJECT MANAGER ONLY -->
+
+        <button
+          *ngIf="canCreateProject()"
+          class="primary-btn"
+          type="button"
+          (click)="openCreateForm()"
+        >
+          + New Project
+        </button>
+
+      </div>
+
+
+
+      <!-- =================================================
+           LOADING
+      ================================================== -->
+
+      <div
+        class="loading-state"
+        *ngIf="loading"
+      >
+
+        <div class="loader"></div>
+
+        <p>
+          Loading projects...
+        </p>
+
+      </div>
+
+
+
+      <!-- =================================================
+           ERROR
+      ================================================== -->
+
+      <div
+        class="error-state"
+        *ngIf="!loading && errorMessage"
+      >
+
+        <div class="error-icon">
+          !
+        </div>
+
+
+        <h3>
+          Something went wrong
+        </h3>
+
+
+        <p>
+          {{ errorMessage }}
+        </p>
+
+
+        <button
+          class="retry-btn"
+          type="button"
+          (click)="loadProjects()"
+        >
+          Try Again
+        </button>
+
+      </div>
+
+
+
+      <!-- =================================================
+           EMPTY STATE
+      ================================================== -->
+
+      <div
+        class="empty-state"
+        *ngIf="
+          !loading &&
+          !errorMessage &&
+          projects.length === 0
+        "
+      >
+
+        <div class="empty-icon">
+          ▣
+        </div>
+
+
+        <h3>
+          No projects yet
+        </h3>
+
+
+        <p>
+          Create your first project to get started.
+        </p>
+
+
+        <!-- ADMIN + PROJECT MANAGER ONLY -->
+
+        <button
+          *ngIf="canCreateProject()"
+          class="primary-btn"
+          type="button"
+          (click)="openCreateForm()"
+        >
+          + Create Project
+        </button>
+
+      </div>
+
+
+
+      <!-- =================================================
+           PROJECT GRID
+      ================================================== -->
+
+      <div
+        class="project-grid"
+        *ngIf="
+          !loading &&
+          !errorMessage &&
+          projects.length > 0
+        "
+      >
+
+        <div
+          class="project-card"
+          *ngFor="let project of projects"
+        >
+
+
+          <!-- =============================================
+               PROJECT HEADER
+          ============================================== -->
+
+          <div class="project-card-header">
+
+            <div class="project-icon">
+              {{ project.name.charAt(0).toUpperCase() }}
+            </div>
+
+
+            <!-- ADMIN + PROJECT MANAGER -->
+
+            <button
+              *ngIf="canManageProjects()"
+              class="more-btn"
+              type="button"
+              title="Manage project"
+            >
+              ⋮
+            </button>
+
+          </div>
+
+
+
+          <!-- =============================================
+               PROJECT DETAILS
+          ============================================== -->
+
+          <div class="project-card-body">
+
+            <h3>
+              {{ project.name }}
+            </h3>
+
+
+            <p>
+              {{
+                project.description ||
+                'No description available.'
+              }}
+            </p>
+
+          </div>
+
+
+
+          <!-- =============================================
+               PROJECT FOOTER
+          ============================================== -->
+
+          <div class="project-card-footer">
+
+            <span
+              class="project-status"
+              [class.completed]="
+                project.status === 'Completed'
+              "
+              [class.on-hold]="
+                project.status === 'On Hold'
+              "
+              [class.planning]="
+                project.status === 'Planning'
+              "
+            >
+              {{ project.status }}
+            </span>
+
+
+            <button
+              class="view-project-btn"
+              type="button"
+              (click)="
+                router.navigate([
+                  '/projects',
+                  project.id
+                ])
+              "
+            >
+              View Project →
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+
+<!-- =======================================================
+     CREATE PROJECT MODAL
+======================================================== -->
+
+<div
+  class="modal-backdrop"
+  *ngIf="showCreateForm"
+  (click)="closeCreateForm()"
+>
+
+  <div
+    class="project-modal"
+    (click)="$event.stopPropagation()"
+  >
+
+
+    <!-- ===================================================
+         MODAL HEADER
+    ==================================================== -->
+
+    <div class="modal-header">
+
+      <div>
+
+        <h2>
+          Create New Project
+        </h2>
+
+        <p>
+          Set up a new TaskForge project.
+        </p>
+
+      </div>
+
+
+      <button
+        class="close-btn"
+        type="button"
+        [disabled]="creating"
+        (click)="closeCreateForm()"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+
+    <!-- ===================================================
+         FORM
+    ==================================================== -->
+
+    <form
+      #projectForm="ngForm"
+      (ngSubmit)="createProject()"
+    >
+
+
+      <!-- =================================================
+           PROJECT NAME
+      ================================================== -->
+
+      <div class="form-group">
+
+        <label for="projectName">
+          Project Name
+        </label>
+
+
+        <input
+          id="projectName"
+          name="projectName"
+          type="text"
+          [(ngModel)]="newProject.name"
+          placeholder="e.g. TaskForge Mobile App"
+          autocomplete="off"
+          required
+        />
+
+      </div>
+
+
+
+      <!-- =================================================
+           DESCRIPTION
+      ================================================== -->
+
+      <div class="form-group">
+
+        <label for="projectDescription">
+          Description
+        </label>
+
+
+        <textarea
+          id="projectDescription"
+          name="projectDescription"
+          [(ngModel)]="newProject.description"
+          placeholder="Describe your project..."
+          rows="4"
+          required
+        ></textarea>
+
+      </div>
+
+
+
+      <!-- =================================================
+           STATUS
+      ================================================== -->
+
+      <div class="form-group">
+
+        <label for="projectStatus">
+          Status
+        </label>
+
+
+        <select
+          id="projectStatus"
+          name="projectStatus"
+          [(ngModel)]="newProject.status"
+        >
+
+          <option value="Active">
+            Active
+          </option>
+
+          <option value="Planning">
+            Planning
+          </option>
+
+          <option value="Completed">
+            Completed
+          </option>
+
+          <option value="On Hold">
+            On Hold
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <!-- =================================================
+           DATES
+      ================================================== -->
+
+      <div class="date-row">
+
+
+        <!-- START DATE -->
+
+        <div class="form-group">
+
+          <label for="startDate">
+            Start Date
+          </label>
+
+
+          <input
+            id="startDate"
+            name="startDate"
+            type="date"
+            [(ngModel)]="newProject.startDate"
+          />
+
+        </div>
+
+
+        <!-- END DATE -->
+
+        <div class="form-group">
+
+          <label for="endDate">
+            End Date
+          </label>
+
+
+          <input
+            id="endDate"
+            name="endDate"
+            type="date"
+            [(ngModel)]="newProject.endDate"
+          />
+
+        </div>
+
+      </div>
+
+
+
+      <!-- =================================================
+           FORM ERROR
+      ================================================== -->
+
+      <div
+        class="form-error"
+        *ngIf="createErrorMessage"
+      >
+        {{ createErrorMessage }}
+      </div>
+
+
+
+      <!-- =================================================
+           ACTION BUTTONS
+      ================================================== -->
+
+      <div class="modal-actions">
+
+
+        <button
+          type="button"
+          class="cancel-btn"
+          [disabled]="creating"
+          (click)="closeCreateForm()"
+        >
+          Cancel
+        </button>
+
+
+        <button
+          type="submit"
+          class="primary-btn"
+          [disabled]="creating"
+        >
+
+          <span *ngIf="!creating">
+            Create Project
+          </span>
+
+          <span *ngIf="creating">
+            Creating...
+          </span>
+
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>

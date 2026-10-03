@@ -1,0 +1,267 @@
+<div class="activities-page">
+
+  <!-- SIDEBAR -->
+
+  <aside class="sidebar">
+
+    <div class="logo">
+      <span class="logo-icon">T</span>
+      <span>TaskForge</span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/dashboard'])"
+      >
+        <span>▦</span>
+        Dashboard
+      </button>
+
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/projects'])"
+      >
+        <span>▣</span>
+        Projects
+      </button>
+
+      <button
+        class="nav-item"
+        type="button"
+        (click)="router.navigate(['/issues'])"
+      >
+        <span>✓</span>
+        Issues
+      </button>
+
+      <button
+        class="nav-item active"
+        type="button"
+      >
+        <span>◷</span>
+        Activities
+      </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <div class="user-mini">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-info">
+          <strong>{{ userName }}</strong>
+          <span>{{ userRole }}</span>
+        </div>
+
+      </div>
+
+      <button
+        class="logout-btn"
+        type="button"
+        (click)="logout()"
+      >
+        <span>↪</span>
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="main-content">
+
+    <header class="topbar">
+
+      <div>
+        <h1>Activities</h1>
+
+        <p>
+          Recent activity across your TaskForge projects.
+        </p>
+      </div>
+
+      <div class="topbar-user">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ERROR -->
+
+    <div
+      class="error-banner"
+      *ngIf="errorMessage"
+    >
+
+      <span>!</span>
+
+      {{ errorMessage }}
+
+      <button
+        type="button"
+        (click)="loadActivities()"
+      >
+        Retry
+      </button>
+
+    </div>
+
+
+    <!-- LOADING -->
+
+    <div
+      class="loading-state"
+      *ngIf="loading"
+    >
+
+      <div class="loader"></div>
+
+      <p>
+        Loading activities...
+      </p>
+
+    </div>
+
+
+    <ng-container *ngIf="!loading">
+
+
+      <!-- WARNING -->
+
+      <div
+        class="warning-banner"
+        *ngIf="activityLoadErrors > 0"
+      >
+
+        <span>!</span>
+
+        Some project activities could not be loaded.
+
+      </div>
+
+
+      <!-- EMPTY -->
+
+      <div
+        class="empty-state"
+        *ngIf="
+          activities.length === 0 &&
+          !errorMessage
+        "
+      >
+
+        <div class="empty-icon">
+          ◷
+        </div>
+
+        <h3>
+          No activities yet
+        </h3>
+
+        <p>
+          Project and issue activity will appear here.
+        </p>
+
+      </div>
+
+
+      <!-- ACTIVITY LIST -->
+
+      <section
+        class="panel"
+        *ngIf="activities.length > 0"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Recent Activity
+            </h2>
+
+            <p>
+              {{ activities.length }}
+              recorded
+              {{ activities.length === 1 ? 'activity' : 'activities' }}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="activity-list">
+
+          <div
+            class="activity-item"
+            *ngFor="let activity of activities"
+          >
+
+            <div class="activity-icon">
+              ◷
+            </div>
+
+            <div class="activity-content">
+
+              <div class="activity-main">
+
+                <strong>
+                  {{ activity.userName }}
+                </strong>
+
+                <span>
+                  {{ activity.action }}
+                </span>
+
+              </div>
+
+              <div class="activity-meta">
+
+                <span>
+                  {{ getProjectName(activity.projectId) }}
+                </span>
+
+                <span>
+                  {{ formatDate(activity.createdAt) }}
+                </span>
+
+                <button
+                  *ngIf="activity.issueId"
+                  type="button"
+                  (click)="openIssue(activity.issueId)"
+                >
+                  View Issue →
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </ng-container>
+
+  </main>
+
+</div>

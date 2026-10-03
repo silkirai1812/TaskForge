@@ -1,0 +1,513 @@
+<div class="create-issue-page">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <div class="logo">
+
+      <span class="logo-icon">
+        T
+      </span>
+
+      <span>
+        TaskForge
+      </span>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+      <button
+        class="nav-item"
+        type="button"
+        (click)="goToDashboard()"
+      >
+        <span>▦</span>
+        Dashboard
+      </button>
+
+
+      <button
+        class="nav-item active"
+        type="button"
+        (click)="goToProjects()"
+      >
+        <span>▣</span>
+        Projects
+      </button>
+
+
+      <button
+        class="nav-item"
+        type="button"
+      >
+        <span>✓</span>
+        Issues
+      </button>
+
+
+      <button
+        class="nav-item"
+        type="button"
+      >
+        <span>◷</span>
+        Activities
+      </button>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+      <div class="user-mini">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-info">
+
+          <strong>
+            {{ userName }}
+          </strong>
+
+          <span>
+            {{ userRole }}
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="logout-btn"
+        type="button"
+        (click)="logout()"
+      >
+        <span>↪</span>
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN CONTENT
+  ====================================================== -->
+
+  <main class="main-content">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div>
+
+        <h1>
+          Create Issue
+        </h1>
+
+        <p>
+          Create a new issue for your project
+        </p>
+
+      </div>
+
+
+      <div class="topbar-user">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ===================================================
+         LOADING PROJECT
+    ==================================================== -->
+
+    <div
+      class="loading-state"
+      *ngIf="loadingProject"
+    >
+
+      <div class="loader"></div>
+
+      <p>
+        Loading project...
+      </p>
+
+    </div>
+
+
+    <!-- ===================================================
+         ERROR
+    ==================================================== -->
+
+    <div
+      class="error-state"
+      *ngIf="
+        !loadingProject &&
+        errorMessage &&
+        !project
+      "
+    >
+
+      <div class="error-icon">
+        !
+      </div>
+
+      <h3>
+        Something went wrong
+      </h3>
+
+      <p>
+        {{ errorMessage }}
+      </p>
+
+      <button
+        class="secondary-btn"
+        type="button"
+        (click)="cancel()"
+      >
+        Back to Project
+      </button>
+
+    </div>
+
+
+    <!-- ===================================================
+         FORM
+    ==================================================== -->
+
+    <section
+      class="form-panel"
+      *ngIf="
+        !loadingProject &&
+        project &&
+        canCreateIssue()
+        "
+    >
+
+
+      <!-- BACK -->
+
+      <button
+        class="back-btn"
+        type="button"
+        (click)="cancel()"
+      >
+        ← Back to {{ project.name }}
+      </button>
+
+
+      <!-- FORM HEADER -->
+
+      <div class="form-header">
+
+        <div>
+
+          <h2>
+            New Issue
+          </h2>
+
+          <p>
+            Add an issue to
+            <strong>
+              {{ project.name }}
+            </strong>
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- ERROR -->
+
+      <div
+        class="form-error"
+        *ngIf="errorMessage"
+      >
+
+        <span>!</span>
+
+        {{ errorMessage }}
+
+      </div>
+
+
+      <!-- SUCCESS -->
+
+      <div
+        class="form-success"
+        *ngIf="successMessage"
+      >
+
+        <span>✓</span>
+
+        {{ successMessage }}
+
+      </div>
+
+
+      <!-- =================================================
+           TITLE
+      ================================================== -->
+
+      <div class="form-group">
+
+        <label for="issueTitle">
+          Issue Title
+          <span>*</span>
+        </label>
+
+        <input
+          id="issueTitle"
+          type="text"
+          name="title"
+          [(ngModel)]="newIssue.title"
+          placeholder="e.g. Fix dashboard layout"
+          maxlength="250"
+          [disabled]="creating"
+        />
+
+        <small>
+          Keep the title short and descriptive.
+        </small>
+
+      </div>
+
+
+      <!-- =================================================
+           DESCRIPTION
+      ================================================== -->
+
+      <div class="form-group">
+
+        <label for="issueDescription">
+          Description
+          <span>*</span>
+        </label>
+
+        <textarea
+          id="issueDescription"
+          name="description"
+          [(ngModel)]="newIssue.description"
+          placeholder="Describe the issue, expected behavior, requirements, or steps to reproduce..."
+          rows="6"
+          maxlength="5000"
+          [disabled]="creating"
+        ></textarea>
+
+        <small>
+          Provide enough detail for another team member to understand the work.
+        </small>
+
+      </div>
+
+
+      <!-- =================================================
+           TYPE + PRIORITY
+      ================================================== -->
+
+      <div class="form-row">
+
+
+        <!-- TYPE -->
+
+        <div class="form-group">
+
+          <label for="issueType">
+            Issue Type
+          </label>
+
+          <select
+            id="issueType"
+            name="type"
+            [(ngModel)]="newIssue.type"
+            [disabled]="creating"
+          >
+
+            <option [ngValue]="1">
+              Task
+            </option>
+
+            <option [ngValue]="2">
+              Bug
+            </option>
+
+            <option [ngValue]="3">
+              Story
+            </option>
+
+            <option [ngValue]="4">
+              Feature
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- PRIORITY -->
+
+        <div class="form-group">
+
+          <label for="issuePriority">
+            Priority
+          </label>
+
+          <select
+            id="issuePriority"
+            name="priority"
+            [(ngModel)]="newIssue.priority"
+            [disabled]="creating"
+          >
+
+            <option [ngValue]="1">
+              Low
+            </option>
+
+            <option [ngValue]="2">
+              Medium
+            </option>
+
+            <option [ngValue]="3">
+              High
+            </option>
+
+            <option [ngValue]="4">
+              Critical
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           ASSIGNEE + DUE DATE
+      ================================================== -->
+
+      <div class="form-row">
+
+
+        <!-- ASSIGNEE -->
+
+        <div class="form-group">
+
+          <label for="assignee">
+            Assignee
+          </label>
+
+          <select
+            id="assignee"
+            name="assignee"
+            [(ngModel)]="newIssue.assigneeId"
+            [disabled]="creating || loadingUsers"
+          >
+
+            <option [ngValue]="undefined">
+              Unassigned
+            </option>
+
+            <option
+              *ngFor="let user of users"
+              [ngValue]="user.id"
+            >
+              {{ user.name }} — {{ user.role }}
+            </option>
+
+          </select>
+
+          <small *ngIf="loadingUsers">
+            Loading users...
+          </small>
+
+        </div>
+
+
+        <!-- DUE DATE -->
+
+        <div class="form-group">
+
+          <label for="dueDate">
+            Due Date
+          </label>
+
+          <input
+            id="dueDate"
+            type="date"
+            name="dueDate"
+            [(ngModel)]="newIssue.dueDate"
+            [disabled]="creating"
+          />
+
+          <small>
+            Optional deadline for this issue.
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           ACTIONS
+      ================================================== -->
+
+      <div class="form-actions">
+
+        <button
+          class="cancel-btn"
+          type="button"
+          (click)="cancel()"
+          [disabled]="creating"
+        >
+          Cancel
+        </button>
+
+
+        <button
+          class="create-btn"
+          type="button"
+          (click)="createIssue()"
+          [disabled]="creating"
+        >
+
+          <span
+            class="button-loader"
+            *ngIf="creating"
+          ></span>
+
+          <span *ngIf="!creating">
+            Create Issue
+          </span>
+
+          <span *ngIf="creating">
+            Creating...
+          </span>
+
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

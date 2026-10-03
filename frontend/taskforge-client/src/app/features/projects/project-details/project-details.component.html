@@ -1,0 +1,1080 @@
+<div class="project-details-page">
+
+  <!-- =====================================================
+       SIDEBAR
+  ====================================================== -->
+
+  <aside class="sidebar">
+
+    <div class="logo">
+      <span class="logo-icon">T</span>
+      <span>TaskForge</span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <button
+        class="nav-item"
+        type="button"
+        (click)="goToDashboard()"
+      >
+        <span>▦</span>
+        Dashboard
+      </button>
+
+      <button
+        class="nav-item active"
+        type="button"
+        (click)="goToProjects()"
+      >
+        <span>▣</span>
+        Projects
+      </button>
+
+      <button
+        class="nav-item"
+        type="button"
+      >
+        <span>✓</span>
+        Issues
+      </button>
+
+      <button
+        class="nav-item"
+        type="button"
+      >
+        <span>◷</span>
+        Activities
+      </button>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <div class="user-mini">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+        <div class="user-info">
+
+          <strong>
+            {{ userName }}
+          </strong>
+
+          <span>
+            {{ userRole }}
+          </span>
+
+        </div>
+
+      </div>
+
+      <button
+        class="logout-btn"
+        type="button"
+        (click)="logout()"
+      >
+        <span>↪</span>
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =====================================================
+       MAIN
+  ====================================================== -->
+
+  <main class="main-content">
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <div>
+
+        <h1>
+          Project Details
+        </h1>
+
+        <p>
+          View project information and manage your team
+        </p>
+
+      </div>
+
+      <div class="topbar-user">
+
+        <div class="avatar">
+          {{ userName.charAt(0).toUpperCase() }}
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- ===================================================
+         PROJECT LOADING
+    ==================================================== -->
+
+    <div
+      class="loading-state"
+      *ngIf="loadingProject"
+    >
+
+      <div class="loader"></div>
+
+      <p>
+        Loading project...
+      </p>
+
+    </div>
+
+
+    <!-- ===================================================
+         PROJECT ERROR
+    ==================================================== -->
+
+    <div
+      class="error-state"
+      *ngIf="!loadingProject && errorMessage"
+    >
+
+      <div class="error-icon">
+        !
+      </div>
+
+      <h3>
+        Something went wrong
+      </h3>
+
+      <p>
+        {{ errorMessage }}
+      </p>
+
+      <button
+        class="primary-btn"
+        type="button"
+        (click)="loadProject()"
+      >
+        Try Again
+      </button>
+
+    </div>
+
+
+    <!-- ===================================================
+         PROJECT CONTENT
+    ==================================================== -->
+
+    <ng-container
+      *ngIf="
+        !loadingProject &&
+        project &&
+        !errorMessage
+      "
+    >
+
+      <!-- BACK -->
+
+      <button
+        class="back-btn"
+        type="button"
+        (click)="goToProjects()"
+      >
+        ← Back to Projects
+      </button>
+
+
+      <!-- =================================================
+           PROJECT HEADER
+      ================================================== -->
+
+      <section class="project-header">
+
+        <div class="project-title-section">
+
+          <div class="project-icon">
+            {{ project.name.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="project-heading">
+
+            <div class="project-title-row">
+
+              <h2>
+                {{ project.name }}
+              </h2>
+
+              <span class="status-badge">
+                {{ project.status }}
+              </span>
+
+            </div>
+
+            <p>
+              {{
+                project.description ||
+                'No description available.'
+              }}
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- PROJECT ACTIONS -->
+
+        <div class="project-actions">
+
+          <!-- Admin + Project Manager -->
+          <button
+            class="secondary-btn"
+            type="button"
+            *ngIf="canEditProject()"
+            (click)="openEditProject()"
+          >
+            ✎ Edit Project
+          </button>
+
+
+          <!-- Admin only -->
+          <button
+            class="danger-btn"
+            type="button"
+            *ngIf="canDeleteProject()"
+            (click)="deleteProject()"
+            [disabled]="deletingProject"
+          >
+
+            <span *ngIf="!deletingProject">
+              🗑 Delete Project
+            </span>
+
+            <span *ngIf="deletingProject">
+              Deleting...
+            </span>
+
+          </button>
+
+
+          <!-- All allowed roles -->
+          <button
+            class="primary-btn"
+            type="button"
+            *ngIf="canCreateIssue()"
+            (click)="createIssue()"
+          >
+            + New Issue
+          </button>
+
+        </div>
+
+      </section>
+
+
+      <!-- DELETE ERROR -->
+
+      <div
+        class="delete-error"
+        *ngIf="deleteErrorMessage"
+      >
+
+        <span>!</span>
+
+        {{ deleteErrorMessage }}
+
+      </div>
+
+
+      <!-- =================================================
+           EDIT PROJECT
+      ================================================== -->
+
+      <section
+        class="panel edit-project-panel"
+        *ngIf="
+          showEditForm &&
+          canEditProject()
+        "
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Edit Project
+            </h2>
+
+            <p>
+              Update the information for this project
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- EDIT ERROR -->
+
+        <div
+          class="edit-error"
+          *ngIf="editErrorMessage"
+        >
+
+          <span>
+            !
+          </span>
+
+          {{ editErrorMessage }}
+
+        </div>
+
+
+        <div class="edit-project-form">
+
+          <!-- PROJECT NAME -->
+
+          <div class="form-group">
+
+            <label for="projectName">
+              Project Name
+            </label>
+
+            <input
+              id="projectName"
+              type="text"
+              [(ngModel)]="editProject.name"
+              [disabled]="savingProject"
+              placeholder="Enter project name"
+            />
+
+          </div>
+
+
+          <!-- DESCRIPTION -->
+
+          <div class="form-group">
+
+            <label for="projectDescription">
+              Description
+            </label>
+
+            <textarea
+              id="projectDescription"
+              rows="4"
+              [(ngModel)]="editProject.description"
+              [disabled]="savingProject"
+              placeholder="Enter project description"
+            ></textarea>
+
+          </div>
+
+
+          <!-- STATUS / DATES -->
+
+          <div class="form-row">
+
+            <!-- STATUS -->
+
+            <div class="form-group">
+
+              <label for="projectStatus">
+                Status
+              </label>
+
+              <select
+                id="projectStatus"
+                [(ngModel)]="editProject.status"
+                [disabled]="savingProject"
+              >
+
+                <option value="Active">
+                  Active
+                </option>
+
+                <option value="Completed">
+                  Completed
+                </option>
+
+                <option value="On Hold">
+                  On Hold
+                </option>
+
+                <option value="Archived">
+                  Archived
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- START DATE -->
+
+            <div class="form-group">
+
+              <label for="startDate">
+                Start Date
+              </label>
+
+              <input
+                id="startDate"
+                type="date"
+                [(ngModel)]="editProject.startDate"
+                [disabled]="savingProject"
+              />
+
+            </div>
+
+
+            <!-- END DATE -->
+
+            <div class="form-group">
+
+              <label for="endDate">
+                End Date
+              </label>
+
+              <input
+                id="endDate"
+                type="date"
+                [(ngModel)]="editProject.endDate"
+                [disabled]="savingProject"
+              />
+
+            </div>
+
+          </div>
+
+
+          <!-- EDIT ACTIONS -->
+
+          <div class="edit-form-actions">
+
+            <button
+              class="cancel-edit-btn"
+              type="button"
+              (click)="closeEditProject()"
+              [disabled]="savingProject"
+            >
+              Cancel
+            </button>
+
+            <button
+              class="save-edit-btn"
+              type="button"
+              (click)="saveProject()"
+              [disabled]="savingProject"
+            >
+
+              <span
+                class="button-loader"
+                *ngIf="savingProject"
+              ></span>
+
+              <span *ngIf="!savingProject">
+                Save Changes
+              </span>
+
+              <span *ngIf="savingProject">
+                Saving...
+              </span>
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           PROJECT INFORMATION
+      ================================================== -->
+
+      <section class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Project Information
+            </h2>
+
+            <p>
+              Basic information about this project
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div class="project-info-grid">
+
+          <!-- PROJECT NAME -->
+
+          <div class="info-item">
+
+            <span>
+              Project Name
+            </span>
+
+            <strong>
+              {{ project.name }}
+            </strong>
+
+          </div>
+
+
+          <!-- STATUS -->
+
+          <div class="info-item">
+
+            <span>
+              Status
+            </span>
+
+            <strong>
+              {{ project.status }}
+            </strong>
+
+          </div>
+
+
+          <!-- START DATE -->
+
+          <div class="info-item">
+
+            <span>
+              Start Date
+            </span>
+
+            <strong>
+
+              {{
+                project.startDate
+                  ? (project.startDate | date: 'mediumDate')
+                  : 'Not set'
+              }}
+
+            </strong>
+
+          </div>
+
+
+          <!-- END DATE -->
+
+          <div class="info-item">
+
+            <span>
+              End Date
+            </span>
+
+            <strong>
+
+              {{
+                project.endDate
+                  ? (project.endDate | date: 'mediumDate')
+                  : 'Not set'
+              }}
+
+            </strong>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           MEMBERS
+      ================================================== -->
+
+      <section class="panel members-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Project Members
+            </h2>
+
+            <p>
+              Manage the people working on this project
+            </p>
+
+          </div>
+
+
+          <!-- Admin + Project Manager -->
+          <button
+            class="secondary-btn"
+            type="button"
+            *ngIf="canManageMembers()"
+            (click)="openAddMemberForm()"
+          >
+            + Add Member
+          </button>
+
+        </div>
+
+
+        <!-- MEMBER ERROR -->
+
+        <div
+          class="member-error"
+          *ngIf="memberErrorMessage"
+        >
+
+          <span>
+            !
+          </span>
+
+          {{ memberErrorMessage }}
+
+        </div>
+
+
+        <!-- ADD MEMBER -->
+
+        <div
+          class="add-member-form"
+          *ngIf="
+            showAddMemberForm &&
+            canManageMembers()
+          "
+        >
+
+          <div class="add-member-content">
+
+            <div class="add-member-heading">
+
+              <strong>
+                Add Team Member
+              </strong>
+
+              <span>
+                Select an active user to add to this project.
+              </span>
+
+            </div>
+
+
+            <select
+              [(ngModel)]="selectedUserId"
+              [disabled]="
+                addingMember ||
+                loadingUsers
+              "
+            >
+
+              <option [ngValue]="null">
+                Select a user
+              </option>
+
+              <option
+                *ngFor="
+                  let user of getAvailableUsers()
+                "
+                [ngValue]="user.id"
+              >
+                {{ user.name }} — {{ user.role }}
+              </option>
+
+            </select>
+
+
+            <div class="member-form-actions">
+
+              <button
+                class="cancel-small-btn"
+                type="button"
+                (click)="closeAddMemberForm()"
+                [disabled]="addingMember"
+              >
+                Cancel
+              </button>
+
+
+              <button
+                class="add-small-btn"
+                type="button"
+                (click)="addMember()"
+                [disabled]="addingMember"
+              >
+
+                <span
+                  class="button-loader"
+                  *ngIf="addingMember"
+                ></span>
+
+                <span *ngIf="!addingMember">
+                  Add Member
+                </span>
+
+                <span *ngIf="addingMember">
+                  Adding...
+                </span>
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- MEMBERS LOADING -->
+
+        <div
+          class="loading-small"
+          *ngIf="loadingMembers"
+        >
+
+          <div class="small-loader"></div>
+
+          Loading members...
+
+        </div>
+
+
+        <!-- NO MEMBERS -->
+
+        <div
+          class="empty-members"
+          *ngIf="
+            !loadingMembers &&
+            members.length === 0
+          "
+        >
+
+          <div class="empty-member-icon">
+            👤
+          </div>
+
+          <strong>
+            No members yet
+          </strong>
+
+          <span>
+            Add team members to this project.
+          </span>
+
+        </div>
+
+
+        <!-- MEMBER LIST -->
+
+        <div
+          class="members-list"
+          *ngIf="
+            !loadingMembers &&
+            members.length > 0
+          "
+        >
+
+          <div
+            class="member-row"
+            *ngFor="let member of members"
+          >
+
+            <div class="member-avatar">
+              {{ member.name.charAt(0).toUpperCase() }}
+            </div>
+
+
+            <div class="member-info">
+
+              <strong>
+                {{ member.name }}
+              </strong>
+
+              <span>
+                {{ member.email }}
+              </span>
+
+            </div>
+
+
+            <span class="role-badge">
+              {{ member.role }}
+            </span>
+
+
+            <span class="joined-date">
+
+              Joined
+
+              {{ member.joinedAt | date: 'mediumDate' }}
+
+            </span>
+
+
+            <!-- Admin + Project Manager -->
+            <button
+              class="remove-member-btn"
+              type="button"
+              *ngIf="canManageMembers()"
+              (click)="removeMember(member)"
+              [disabled]="
+                removingMemberId === member.userId
+              "
+            >
+
+              <span
+                *ngIf="
+                  removingMemberId !== member.userId
+                "
+              >
+                Remove
+              </span>
+
+              <span
+                *ngIf="
+                  removingMemberId === member.userId
+                "
+              >
+                Removing...
+              </span>
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           ISSUES
+      ================================================== -->
+
+      <section class="panel issues-panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <h2>
+              Issues
+            </h2>
+
+            <p>
+              Issues associated with this project
+            </p>
+
+          </div>
+
+
+          <!-- Admin + Project Manager + Developer -->
+          <button
+            class="primary-btn"
+            type="button"
+            *ngIf="canCreateIssue()"
+            (click)="createIssue()"
+          >
+            + New Issue
+          </button>
+
+        </div>
+
+
+        <!-- ISSUE LOADING -->
+
+        <div
+          class="loading-small"
+          *ngIf="loadingIssues"
+        >
+
+          <div class="small-loader"></div>
+
+          Loading issues...
+
+        </div>
+
+
+        <!-- ISSUE ERROR -->
+
+        <div
+          class="issue-error"
+          *ngIf="
+            !loadingIssues &&
+            issueErrorMessage
+          "
+        >
+
+          {{ issueErrorMessage }}
+
+          <button
+            type="button"
+            (click)="loadIssues()"
+          >
+            Retry
+          </button>
+
+        </div>
+
+
+        <!-- EMPTY -->
+
+        <div
+          class="empty-state"
+          *ngIf="
+            !loadingIssues &&
+            !issueErrorMessage &&
+            issues.length === 0
+          "
+        >
+
+          <div class="empty-icon">
+            ✓
+          </div>
+
+          <h3>
+            No issues yet
+          </h3>
+
+          <p>
+            Create an issue to start tracking work.
+          </p>
+
+
+          <!-- IMPORTANT:
+               Only allowed roles can see this -->
+          <button
+            class="primary-btn"
+            type="button"
+            *ngIf="canCreateIssue()"
+            (click)="createIssue()"
+          >
+            + Create Issue
+          </button>
+
+        </div>
+
+
+        <!-- ISSUE TABLE -->
+
+        <div
+          class="issues-table"
+          *ngIf="
+            !loadingIssues &&
+            !issueErrorMessage &&
+            issues.length > 0
+          "
+        >
+
+          <div class="table-header">
+
+            <span>
+              Issue
+            </span>
+
+            <span>
+              Type
+            </span>
+
+            <span>
+              Priority
+            </span>
+
+            <span>
+              Status
+            </span>
+
+            <span>
+              Assignee
+            </span>
+
+          </div>
+
+
+          <button
+            class="table-row"
+            type="button"
+            *ngFor="let issue of issues"
+            (click)="openIssue(issue.id)"
+          >
+
+            <span class="issue-title">
+
+              <strong>
+                {{ issue.title }}
+              </strong>
+
+              <small>
+                #{{ issue.id }}
+              </small>
+
+            </span>
+
+
+            <span>
+              {{ getTypeName(issue.type) }}
+            </span>
+
+
+            <span>
+
+              <span
+                class="priority-badge"
+                [class.low]="issue.priority === 1"
+                [class.medium]="issue.priority === 2"
+                [class.high]="issue.priority === 3"
+                [class.critical]="issue.priority === 4"
+              >
+                {{ getPriorityName(issue.priority) }}
+              </span>
+
+            </span>
+
+
+            <span>
+
+              <span
+                class="issue-status"
+                [class.progress]="issue.status === 2"
+                [class.review]="issue.status === 3"
+                [class.done]="issue.status === 4"
+              >
+                {{ getStatusName(issue.status) }}
+              </span>
+
+            </span>
+
+
+            <span class="assignee">
+              {{ issue.assigneeName || 'Unassigned' }}
+            </span>
+
+
+            <span class="arrow">
+              →
+            </span>
+
+          </button>
+
+        </div>
+
+      </section>
+
+    </ng-container>
+
+  </main>
+
+</div>
