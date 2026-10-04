@@ -1,10 +1,8 @@
 import { CommonModule } from '@angular/common';
-
 import { Component, OnInit } from '@angular/core';
-
 import { FormsModule } from '@angular/forms';
-
 import { ActivatedRoute, Router } from '@angular/router';
+import { AiService, AiIssueResponse } from '../../../core/services/ai.service';
 
 import {
   IssueService,
@@ -38,6 +36,11 @@ import {
 })
 export class IssueDetailsComponent implements OnInit {
   // =====================================================
+
+  aiLoading = false;
+  aiError = '';
+  aiResult: AiIssueResponse | null = null;
+  showAiAssistant = false;
 
   // ISSUE
 
@@ -185,6 +188,7 @@ export class IssueDetailsComponent implements OnInit {
     private commentService: CommentService,
 
     private activityService: ActivityService,
+    private aiService: AiService,
   ) {}
 
   // =====================================================
@@ -744,6 +748,98 @@ export class IssueDetailsComponent implements OnInit {
 
       default:
         return 'Unknown';
+    }
+  }
+
+  analyzeIssueWithAI(): void {
+    if (!this.issue) {
+      return;
+    }
+
+    if (!this.issue.title?.trim() || !this.issue.description?.trim()) {
+      this.aiError = 'Issue title and description are required.';
+      return;
+    }
+
+    this.aiLoading = true;
+    this.aiError = '';
+    this.aiResult = null;
+    this.showAiAssistant = true;
+
+    this.aiService
+      .analyzeIssue({
+        title: this.issue.title,
+        description: this.issue.description,
+      })
+      .subscribe({
+        next: (result) => {
+          this.aiResult = result;
+          this.aiLoading = false;
+        },
+        error: (error) => {
+          console.error('AI analysis failed:', error);
+
+          this.aiError =
+            error?.error?.message || 'AI analysis failed. Please try again.';
+
+          this.aiLoading = false;
+        },
+      });
+  }
+
+  applyAiSuggestions(): void {
+    if (!this.issue || !this.aiResult) {
+      return;
+    }
+
+    this.editIssue = {
+      title: this.aiResult.improvedTitle,
+      description: this.aiResult.improvedDescription,
+      type: this.getTypeNumber(this.aiResult.suggestedType),
+      priority: this.getPriorityNumber(this.aiResult.suggestedPriority),
+      status: Number(this.issue.status),
+      assigneeId: this.issue.assigneeId,
+      dueDate: this.issue.dueDate ? this.issue.dueDate.substring(0, 10) : '',
+    };
+
+    this.editErrorMessage = '';
+
+    this.showEditForm = true;
+
+    this.showAiAssistant = false;
+  }
+
+  getTypeNumber(type: string): number {
+    switch (type?.toLowerCase()) {
+      case 'bug':
+        return 2;
+
+      case 'story':
+        return 3;
+
+      case 'feature':
+        return 4;
+
+      case 'task':
+      default:
+        return 1;
+    }
+  }
+
+  getPriorityNumber(priority: string): number {
+    switch (priority?.toLowerCase()) {
+      case 'low':
+        return 1;
+
+      case 'high':
+        return 3;
+
+      case 'critical':
+        return 4;
+
+      case 'medium':
+      default:
+        return 2;
     }
   }
 
