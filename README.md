@@ -181,6 +181,23 @@ The frontend will run at:
 http://localhost:4200
 ```
 
+## Screenshots
+
+### Dashboard
+![Home Page](./images/dashboard.png)
+
+### Projects Page
+![Login Page](./images/projects.png)
+
+### Project-details Page
+![Dashboard](./images/project-details.png)
+
+### Issues Page
+![Dashboard](./images/issues.png)
+
+### Activities Page
+![Dashboard](./images/activities.png)
+
 ## AI Issue Assistant
 
 TaskForge includes an AI assistant powered by Google Gemini.
