@@ -6,7 +6,7 @@
 
     <div class="logo">
       <span class="logo-icon">T</span>
-      <span>TaskForge</span>
+      <span class="logo-text">TaskForge</span>
     </div>
 
     <nav class="sidebar-nav">
@@ -14,36 +14,37 @@
       <button
         class="nav-item"
         type="button"
-        (click)="router.navigate(['/dashboard'])"
+        (click)="goToDashboard()"
       >
-        <span>▦</span>
-        Dashboard
+        <span class="nav-icon">▦</span>
+        <span class="nav-label">Dashboard</span>
       </button>
 
       <button
         class="nav-item"
         type="button"
-        (click)="router.navigate(['/projects'])"
+        (click)="goToProjects()"
       >
-        <span>▣</span>
-        Projects
+        <span class="nav-icon">▣</span>
+        <span class="nav-label">Projects</span>
       </button>
 
       <button
         class="nav-item active"
         type="button"
+        (click)="goToIssues()"
       >
-        <span>✓</span>
-        Issues
+        <span class="nav-icon">✓</span>
+        <span class="nav-label">Issues</span>
       </button>
 
       <button
         class="nav-item"
         type="button"
-        (click)="router.navigate(['/activities'])"
+        (click)="goToActivities()"
       >
-        <span>◷</span>
-        Activities
+        <span class="nav-icon">◷</span>
+        <span class="nav-label">Activities</span>
       </button>
 
     </nav>
@@ -68,8 +69,8 @@
         type="button"
         (click)="logout()"
       >
-        <span>↪</span>
-        Logout
+        <span class="logout-icon">↪</span>
+        <span class="logout-label">Logout</span>
       </button>
 
     </div>
@@ -83,9 +84,12 @@
 
     <header class="topbar">
 
-      <div>
+      <div class="page-heading">
         <h1>Issues</h1>
-        <p>View and manage issues across your projects.</p>
+
+        <p>
+          View and manage issues across your projects.
+        </p>
       </div>
 
       <div class="topbar-user">
@@ -107,7 +111,9 @@
     >
       <span>!</span>
 
-      {{ errorMessage }}
+      <span class="message">
+        {{ errorMessage }}
+      </span>
 
       <button
         type="button"
@@ -125,6 +131,7 @@
       *ngIf="loading"
     >
       <div class="loader"></div>
+
       <p>Loading issues...</p>
     </div>
 
@@ -139,7 +146,10 @@
         *ngIf="issueLoadErrors > 0"
       >
         <span>!</span>
-        Some project issues could not be loaded.
+
+        <span>
+          Some project issues could not be loaded.
+        </span>
       </div>
 
 
@@ -165,7 +175,7 @@
         <button
           class="primary-btn"
           type="button"
-          (click)="router.navigate(['/projects'])"
+          (click)="goToProjects()"
         >
           View Projects
         </button>
@@ -216,7 +226,10 @@
             (click)="openIssue(issue.id)"
           >
 
-            <div class="issue-title">
+            <div
+              class="issue-title"
+              data-label="Issue"
+            >
 
               <strong>
                 {{ issue.title }}
@@ -229,17 +242,20 @@
             </div>
 
 
-            <span class="project-name">
+            <span
+              class="project-name"
+              data-label="Project"
+            >
               {{ getProjectName(issue.projectId) }}
             </span>
 
 
-            <span>
+            <span data-label="Type">
               {{ getTypeName(issue.type) }}
             </span>
 
 
-            <span>
+            <span data-label="Priority">
 
               <span
                 class="priority-badge"
@@ -254,7 +270,7 @@
             </span>
 
 
-            <span>
+            <span data-label="Status">
 
               <span
                 class="issue-status"
@@ -268,7 +284,10 @@
             </span>
 
 
-            <span class="assignee">
+            <span
+              class="assignee"
+              data-label="Assignee"
+            >
               {{ issue.assigneeName || 'Unassigned' }}
             </span>
 

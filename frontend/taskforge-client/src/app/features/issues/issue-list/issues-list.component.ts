@@ -1,8 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
 import {
   IssueService,
@@ -59,41 +57,84 @@ export class IssuesListComponent implements OnInit {
           return;
         }
 
+        /*
+         * IMPORTANT:
+         * We need all issues belonging to each project.
+         *
+         * Do NOT use getIssue(project.id) here.
+         * project.id is a project ID, not an issue ID.
+         */
         const requests = projects.map(project =>
-          this.issueService.getIssue(project.id).pipe(
-            catchError(() => {
-              this.issueLoadErrors++;
-              return of([]);
-            })
-          )
+          this.issueService.getIssuesByProject(project.id)
         );
 
-        forkJoin(requests).subscribe({
-          next: (results) => {
-            this.issues = results
-              .flat()
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime()
+        /*
+         * Load each project's issues independently.
+         * If one project fails, keep the issues from the
+         * other projects instead of breaking the whole page.
+         */
+        let completedRequests = 0;
+        const allIssues: Issue[] = [];
+
+        requests.forEach(request => {
+
+          request.subscribe({
+            next: (issues) => {
+
+              allIssues.push(...issues);
+
+              completedRequests++;
+
+              if (completedRequests === requests.length) {
+                this.finishLoadingIssues(allIssues);
+              }
+
+            },
+
+            error: (error) => {
+
+              console.error(
+                'Failed to load issues for a project:',
+                error
               );
 
-            this.loading = false;
-          },
-          error: () => {
-            this.errorMessage =
-              'Unable to load issues. Please try again.';
-            this.loading = false;
-          }
+              this.issueLoadErrors++;
+
+              completedRequests++;
+
+              if (completedRequests === requests.length) {
+                this.finishLoadingIssues(allIssues);
+              }
+            }
+          });
+
         });
       },
 
-      error: () => {
+      error: (error) => {
+
+        console.error(
+          'Failed to load projects:',
+          error
+        );
+
         this.errorMessage =
           'Unable to load projects. Please try again.';
+
         this.loading = false;
       }
     });
+  }
+
+  private finishLoadingIssues(issues: Issue[]): void {
+
+    this.issues = issues.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+    );
+
+    this.loading = false;
   }
 
   openIssue(issueId: number): void {
@@ -102,6 +143,22 @@ export class IssuesListComponent implements OnInit {
 
   openProject(projectId: number): void {
     this.router.navigate(['/projects', projectId]);
+  }
+
+  goToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  goToProjects(): void {
+    this.router.navigate(['/projects']);
+  }
+
+  goToIssues(): void {
+    this.router.navigate(['/issues']);
+  }
+
+  goToActivities(): void {
+    this.router.navigate(['/activities']);
   }
 
   getProjectName(projectId: number): string {
@@ -115,12 +172,16 @@ export class IssuesListComponent implements OnInit {
     switch (Number(status)) {
       case 1:
         return 'Todo';
+
       case 2:
         return 'In Progress';
+
       case 3:
         return 'In Review';
+
       case 4:
         return 'Done';
+
       default:
         return 'Unknown';
     }
@@ -130,12 +191,16 @@ export class IssuesListComponent implements OnInit {
     switch (Number(priority)) {
       case 1:
         return 'Low';
+
       case 2:
         return 'Medium';
+
       case 3:
         return 'High';
+
       case 4:
         return 'Critical';
+
       default:
         return 'Unknown';
     }
@@ -145,12 +210,16 @@ export class IssuesListComponent implements OnInit {
     switch (Number(type)) {
       case 1:
         return 'Task';
+
       case 2:
         return 'Bug';
+
       case 3:
         return 'Story';
+
       case 4:
         return 'Feature';
+
       default:
         return 'Unknown';
     }
