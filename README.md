@@ -18,6 +18,16 @@ It allows users to manage projects, create and track issues, collaborate through
 - Project and issue activity tracking
 - AI-powered issue assistant
 
+## User Roles
+
+TaskForge uses role-based access control with three roles:
+
+| Role | Responsibilities |
+|---|---|
+| **Admin** | Manage projects, users, project members, issues and overall system access |
+| **Project Manager** | Create and manage projects, manage project members and manage issues |
+| **Developer** | View projects, work with issues, update issues and collaborate through comments |
+
 ## Tech Stack
 
 ### Frontend
@@ -87,7 +97,54 @@ Make sure Docker Desktop is running.
 docker start taskforge-sql
 ```
 
-### 2. Run the Backend
+If the container does not exist yet, create it using:
+
+```bash
+docker run \
+  --name taskforge-sql \
+  -e ACCEPT_EULA=Y \
+  -e MSSQL_SA_PASSWORD='YOUR_DATABASE_PASSWORD' \
+  -p 1433:1433 \
+  -d \
+  mcr.microsoft.com/mssql/server:2022-latest
+```
+
+### 2. Set Up the Database
+
+Open a terminal and go to the backend:
+
+```bash
+cd backend/TaskForge.API
+```
+
+Restore the required packages:
+
+```bash
+dotnet restore
+```
+
+Apply the Entity Framework Core migrations:
+
+```bash
+dotnet ef database update
+```
+
+This creates and updates the TaskForge database schema in SQL Server.
+
+### 3. Configure Application Secrets
+
+TaskForge uses .NET User Secrets for sensitive configuration.
+
+Set the required values:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "YOUR_CONNECTION_STRING"
+dotnet user-secrets set "Jwt:Key" "YOUR_JWT_SECRET"
+dotnet user-secrets set "Gemini:ApiKey" "YOUR_GEMINI_API_KEY"
+```
+
+
+### 4. Run the Backend
 
 Open a terminal and run:
 
@@ -108,7 +165,7 @@ Swagger will be available at:
 http://localhost:5149/swagger
 ```
 
-### 3. Run the Frontend
+### 5. Run the Frontend
 
 Open another terminal and run:
 
