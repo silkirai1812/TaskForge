@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -15,7 +16,7 @@ export interface ProjectMember {
 })
 export class ProjectMemberService {
 
-  private apiUrl = 'http://localhost:5149/api/projects';
+  private apiUrl = `${environment.apiUrl}/issues`;
 
   constructor(private http: HttpClient) {}
 

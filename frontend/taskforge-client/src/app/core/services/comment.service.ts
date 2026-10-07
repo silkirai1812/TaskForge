@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -25,7 +26,7 @@ export interface UpdateCommentRequest {
 })
 export class CommentService {
 
-  private apiUrl = 'http://localhost:5149/api';
+  private apiUrl = `${environment.apiUrl}/comments`;
 
   constructor(private http: HttpClient) {}
 
